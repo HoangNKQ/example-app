@@ -30,11 +30,12 @@ Route::get('/', function () {
             $document -> matter('title'),
             $document -> matter('excerpt'),
             $document -> matter('date'),
-            $document -> body()
+            $document -> body(),
+            $document -> matter('slug')
         ));
     }
 
-    // ddd($posts[0] -> title);
+    // ddd($posts[0] -> slug);
     
     return view('posts', ['posts' => $posts]);  
 });
