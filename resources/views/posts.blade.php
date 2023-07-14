@@ -13,6 +13,5 @@
             <?php echo $post; ?>
         </article>
     <?php endforeach; ?>
-
 </body>
 </html>
