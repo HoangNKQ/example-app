@@ -1,38 +1,63 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\File;
+use Spatie\YamlFrontMatter\YamlFrontMatter;
 
-class Post {
+class Post
+{
 
-    public static function all() 
+    public $title;
+
+    public $excerpt;
+
+    public $date;
+
+    public $body;
+
+    public $slug;
+
+    public function __construct($title, $excerpt, $date, $body, $slug)
     {
-        $files = File::files(resource_path("posts/"));
-        
-        return array_map(function($file) {
-            return $file->getContents();
-        }, $files);
+        $this->title = $title;
+        $this->excerpt = $excerpt;
+        $this->date = $date;
+        $this->body = $body;
+        $this->slug = $slug;
     }
-    
-    public static function find($slug) 
+
+    public static function all()
     {
-        // Path to resource htmls
-        // $path = __DIR__."/../resources/posts/{$slug}.html";
-        $path = resource_path("posts/{$slug}.html");
+        return cache()->rememberForever('posts.all', function () {
+            $files = File::files(resource_path("posts/"));
 
-        //check if file exists
-        if(!file_exists($path)) {
-            throw new ModelNotFoundException;
-        }
+            $posts = collect($files)
+                ->map(function ($file) {
+                    return YamlFrontMatter::parseFile($file);
+                })
+                ->map(function ($document) {
+                    return new Post(
+                        $document->matter('title'),
+                        $document->matter('excerpt'),
+                        $document->matter('date'),
+                        $document->body(),
+                        $document->matter('slug')
+                    );
+                })
+                ->sortByDesc('title');
 
-        //get contents from $path and assign to $post
-        $post =  cache()->remember("post.{$slug}", 5, function() use ($path) {
-                var_dump("file_get_content");
-                return file_get_contents($path);
+            return $posts;
         });
+    }
 
-        // return post content
+    public static function find($slug)
+    {
+        $posts = static::all();
+
+        $post = $posts->firstWhere('slug', $slug);
+
         return $post;
     }
-
 }
