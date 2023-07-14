@@ -30,30 +30,33 @@ class Post
 
     public static function all()
     {
-        $files = File::files(resource_path("posts/"));
+        return cache()->rememberForever('posts.all', function () {
+            $files = File::files(resource_path("posts/"));
 
-        $posts = collect($files)
-            ->map(function ($file) {
-                return YamlFrontMatter::parseFile($file);
-            })
-            ->map(function ($document) {
-                return new Post(
-                    $document->matter('title'),
-                    $document->matter('excerpt'),
-                    $document->matter('date'),
-                    $document->body(),
-                    $document->matter('slug')
-                );
-            });
-            
-        return $posts;
+            $posts = collect($files)
+                ->map(function ($file) {
+                    return YamlFrontMatter::parseFile($file);
+                })
+                ->map(function ($document) {
+                    return new Post(
+                        $document->matter('title'),
+                        $document->matter('excerpt'),
+                        $document->matter('date'),
+                        $document->body(),
+                        $document->matter('slug')
+                    );
+                })
+                ->sortByDesc('title');
+
+            return $posts;
+        });
     }
 
     public static function find($slug)
     {
         $posts = static::all();
 
-        $post = $posts -> firstWhere('slug', $slug);
+        $post = $posts->firstWhere('slug', $slug);
 
         return $post;
     }
