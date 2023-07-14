@@ -51,21 +51,10 @@ class Post
 
     public static function find($slug)
     {
-        // Path to resource htmls
-        $path = resource_path("posts/{$slug}.html");
+        $posts = static::all();
 
-        //check if file exists
-        if (!file_exists($path)) {
-            throw new ModelNotFoundException;
-        }
+        $post = $posts -> firstWhere('slug', $slug);
 
-        //get contents from $path and assign to $post
-        $post =  cache()->remember("post.{$slug}", 5, function () use ($path) {
-            var_dump("file_get_content");
-            return file_get_contents($path);
-        });
-
-        // return post content
         return $post;
     }
 }
